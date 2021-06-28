@@ -9,13 +9,20 @@ class PlaygroundSerializer(serializers.ModelSerializer):
         fields = ['roomId']
     
     def save(self):
-        newRoom = Room(
-            roomId = self.validated_data['roomId']
-        )
+        newRoomId = self.validated_data['roomId']
 
-        newRoom.players.add(self.context['request'].user)
-        newRoom.owner = self.context['request'].user
-        
-        
-        newRoom.save()
-        return newRoom
+        try:
+            Room.objects.get(roomId=newRoomId)
+            return "Room Already Exists"
+            
+        except:
+            newRoom = Room(
+                roomId = newRoomId
+            )
+
+            newRoom.players.add(self.context['request'].user)
+            newRoom.owner = self.context['request'].user
+            
+            
+            newRoom.save()
+            return newRoom
