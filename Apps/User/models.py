@@ -1,3 +1,4 @@
+from itertools import filterfalse
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 
@@ -39,6 +40,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(db_index=True, unique=True)
     is_verified = models.BooleanField(default=False)
     role = models.CharField(max_length=30, null=True, blank=True)
+    isActive = models.BooleanField(default=False)
+    isKilled = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)

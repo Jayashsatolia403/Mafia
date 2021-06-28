@@ -14,6 +14,7 @@ class PlaygroundSerializer(serializers.ModelSerializer):
         )
 
         newRoom.players.add(self.context['request'].user)
+        newRoom.owner = self.context['request'].user
         
         
         newRoom.save()
