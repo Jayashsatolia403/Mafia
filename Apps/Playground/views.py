@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from .models import Room
 from Apps.User.models import User
@@ -16,10 +17,10 @@ def createRoom(request):
     if serializer.is_valid():
         result = serializer.save()
         if result == "Room Already Exists":
-            return result
+            return Response(result)
     else:
-        return {serializer.errors}
-    return "Room Created Successfully"
+        return Response(serializer.errors)
+    return Response("Room Created Successfully")
 
 @api_view(['POST',])
 def joinRoom(request, roomId):
@@ -27,9 +28,9 @@ def joinRoom(request, roomId):
         user = request.user
         room = Room.objects.get(roomId=roomId)
         room.players.add(user)
-        return "Joined"
+        return Response("Joined")
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 @api_view(['POST',])
 def leaveRoom(request, roomId):
@@ -39,62 +40,62 @@ def leaveRoom(request, roomId):
         user.role = ""
         room = Room.objects.get(roomId=roomId)
         room.players.remove(user)
-        return "Left"
+        return Response("Left")
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 @api_view(['GET',])
 def noOfPlayersInRoom(request, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
-        return len(room.players)
+        return Response(len(room.players))
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 
 @api_view(['GET',])
 def noOfMafiasInRoom(request, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
-        return len(room.mafias)
+        return Response(len(room.mafias))
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 @api_view(['GET',])
 def noOfCityInRoom(request, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
-        return len(room.city)
+        return Response(len(room.city))
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 @api_view(['GET',])
 def hasGameEnded(request, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
-        return len(room.city)-len(room.mafias) < 1
+        return Response(len(room.city)-len(room.mafias) < 1)
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 @api_view(['GET',])
 def isDoctorAlive(request, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
         if room.doctor != None:
-            return True
-        return False
+            return Response(True)
+        return Response(False)
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 @api_view(['GET',])
 def isDetectiveAlive(request, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
         if room.detective != None:
-            return True
-        return False
+            return Response(True)
+        return Response(False)
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 
 @api_view(['GET',])
@@ -103,9 +104,9 @@ def killSomeone(request, userId, roomId):
         room = Room.objects.get(roomId=roomId)
         user = User.objects.get(id=userId)
         user.isKilled = True
-        return "{} Killed".format(user.username)
+        return Response("{} Killed".format(user.username))
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 @api_view(['GET',])
 def saveSomeone(request, userId, roomId):
@@ -136,9 +137,9 @@ def saveSomeone(request, userId, roomId):
                     player.isKilled = False
                     break
 
-        return "{} Saved".format(user.username)
+        return Response("{} Saved".format(user.username))
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 
 
@@ -163,9 +164,9 @@ def voteOut(request, userId, roomID):
         user.role = ""
         user.isActive = False
 
-        return "User {} Removed".format(user.username)
+        return Response("User {} Removed".format(user.username))
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
 
 
 
@@ -197,10 +198,10 @@ def startGame(request, roomId):
                 else:
                     room.city.add(players[i])
             
-            return "Game Started"
+            return Response("Game Started")
 
         else:
-            return "Only Owner Can Start Game"
+            return Response("Only Owner Can Start Game")
         
     except:
-        return "Room Does Not Exists"
+        return Response("Room Does Not Exists")
