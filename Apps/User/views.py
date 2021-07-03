@@ -1,6 +1,6 @@
 from django.http.response import HttpResponse
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authtoken.models import Token
 
 from django.core.mail import EmailMultiAlternatives
@@ -8,6 +8,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from .tokens import account_activation_token
 from django.utils.encoding import force_bytes, force_text
 from django.template.loader import get_template
+from rest_framework.permissions import AllowAny
 
 from .models import User
 
@@ -18,6 +19,7 @@ from .serializers import RegistrationSerializer
 tokenValue = {}
 
 @api_view(['POST',])
+@permission_classes((AllowAny,))
 def registration_view(request):
     if request.method == 'POST':
         serializer = RegistrationSerializer(data=request.data)
@@ -31,7 +33,7 @@ def registration_view(request):
             data['token'] = token
 
             # Send Email Verification Link
-            htmly = get_template('Users/ActivateAccount.html')
+            htmly = get_template('User/ActivateAccount.html')
 
             ans = {
                     'user':user,

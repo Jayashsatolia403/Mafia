@@ -12,3 +12,4 @@ class Room(models.Model):
     isFilled = models.BooleanField(default=False)
     isStarted = models.BooleanField(default=False)
     winner = models.CharField(max_length=10)
+    noOfPlayers = models.IntegerField(null=True, blank=True)

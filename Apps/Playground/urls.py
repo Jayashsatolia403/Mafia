@@ -1,11 +1,13 @@
 from django.db.models.query import ValuesIterable
 from django.urls import path
 
-from .views import createRoom, leaveRoom, noOfPlayersInRoom, noOfMafiasInRoom, noOfCityInRoom, hasGameEnded, isDetectiveAlive, isDoctorAlive, killSomeone, saveSomeone, startGame, voteOut
+from .views import joinRoom, RoomListView, createRoom, leaveRoom, noOfPlayersInRoom, noOfMafiasInRoom, noOfCityInRoom, hasGameEnded, isDetectiveAlive, isDoctorAlive, killSomeone, saveSomeone, startGame, voteOut
 
 
 urlpatterns = [
+    path('', RoomListView.as_view()),
     path('createRoom/', createRoom, name='createRoom'),
+    path('<roomId>/joinRoom/', joinRoom, name='joinRoom'),
     path('<roomId>/leaveRoom/', leaveRoom, name='leaveRoom'),
     path('<roomId>/noOfPlayersInRoom/', noOfPlayersInRoom, name='noOfPlayersInRoom'),
     path('<roomId>/noOfMafiasInRoom/', noOfMafiasInRoom, name='noOfMafiasInRoom'),

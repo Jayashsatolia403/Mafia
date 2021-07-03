@@ -1,18 +1,28 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 
 from .models import Room
 from Apps.User.models import User
-from .serializers import PlaygroundSerializer
+from .serializers import PlaygroundSerializer, RoomSerializer
 
 import random
 
 avilableRoles = ['Detective', 'Doctor', 'Mafia', 'Mafia', 'Citizen', 'Citizen', 'Citizen', 'Mafia', 'Mafia', 'Citizen', 'Citizen', 'Citizen', 'SuicideBomber']
+minLimitPlayers = 7
+
+@permission_classes((AllowAny,))
+class RoomListView(ListAPIView):
+    queryset = Room.objects.all()
+    serializer_class = RoomSerializer
 
 
 
 @api_view(['POST',])
 def createRoom(request):
+    if request.user.isActive:
+        return Response("Please Close Your First Game Before Starting New Game")
     serializer = PlaygroundSerializer(data=request.data, context={'request':request})
     if serializer.is_valid():
         result = serializer.save()
@@ -22,7 +32,7 @@ def createRoom(request):
         return Response(serializer.errors)
     return Response("Room Created Successfully")
 
-@api_view(['POST',])
+@api_view(['GET',])
 def joinRoom(request, roomId):
     try:
         user = request.user
@@ -32,7 +42,7 @@ def joinRoom(request, roomId):
     except:
         return Response("Room Does Not Exists")
 
-@api_view(['POST',])
+@api_view(['GET',])
 def leaveRoom(request, roomId):
     try:
         user = request.user
@@ -173,6 +183,7 @@ def voteOut(request, userId, roomID):
 
 @api_view(['POST',])
 def startGame(request, roomId):
+    global minLimitPlayers
     try:
         global avilableRoles
         user = request.user
@@ -182,6 +193,9 @@ def startGame(request, roomId):
             players = room.players
             room.isFilled = True
             room.isStarted = True
+
+            if len(players) < minLimitPlayers:
+                return Response("Can not Start Game For less than 7 Players")
 
 
             random.shuffle(players)
