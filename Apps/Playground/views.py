@@ -37,7 +37,13 @@ def joinRoom(request, roomId):
     try:
         user = request.user
         room = Room.objects.get(roomId=roomId)
+
+        if user in room.players.all():
+            return Response("You are Already in!")
         room.players.add(user)
+        room.noOfPlayers += 1
+        room.save()
+        user.save()
         return Response("Joined")
     except:
         return Response("Room Does Not Exists")
@@ -46,13 +52,20 @@ def joinRoom(request, roomId):
 def leaveRoom(request, roomId):
     try:
         user = request.user
+        room = Room.objects.get(roomId=roomId)
+        if user not in room.players.all():
+            return "You are not in Room!"
         user.isActive = False
         user.role = ""
-        room = Room.objects.get(roomId=roomId)
+        room.players.noOfPlayers += 1
         room.players.remove(user)
+        room.save()
+        user.save()
         return Response("Left")
     except:
         return Response("Room Does Not Exists")
+
+# Number of Something
 
 @api_view(['GET',])
 def noOfPlayersInRoom(request, roomId):
@@ -61,6 +74,11 @@ def noOfPlayersInRoom(request, roomId):
         return Response(len(room.players))
     except:
         return Response("Room Does Not Exists")
+
+@api_view(['GET',])
+def playerType(request):
+    print(request.user.role)
+    return Response(request.user.role)
 
 
 @api_view(['GET',])
@@ -76,6 +94,17 @@ def noOfCityInRoom(request, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
         return Response(len(room.city))
+    except:
+        return Response("Room Does Not Exists")
+
+# Players in Room
+
+@api_view(['GET',])
+def playersInRoom(request, roomId):
+    try:
+        print(roomId)
+        room = Room.objects.get(roomId=roomId)
+        return Response([player.username for player in room.players.all()])
     except:
         return Response("Room Does Not Exists")
 
@@ -112,9 +141,11 @@ def isDetectiveAlive(request, roomId):
 def killSomeone(request, userId, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
-        user = User.objects.get(id=userId)
+        user = User.objects.get(username=userId)
         user.isKilled = True
-        return Response("{} Killed".format(user.username))
+        room.save()
+        user.save()
+        return Response("{} Killed".format(userId))
     except:
         return Response("Room Does Not Exists")
 
@@ -122,14 +153,21 @@ def killSomeone(request, userId, roomId):
 def saveSomeone(request, userId, roomId):
     try:
         room = Room.objects.get(roomId=roomId)
-        user = User.objects.get(id=userId)
+        user = User.objects.get(username=userId)
+
+        # print(" >>> Is There Any Issue??")
         
         if user.isKilled == True:
+            print(" >>> Is There Any Issue??")
             user.isKilled = False
+            user.save()
         else:
-            for player in room.players:
+            for player in room.players.all():
+                print(" >>> Is There Any Issue??")
                 if player.isKilled == True:
+                    room.noOfPlayers -= 1
                     room.players.remove(player)
+                    print(" >>> Is There Any Issue??")
                     
                     if player.role == "Mafia":
                         room.mafias.remove(player)
@@ -145,7 +183,11 @@ def saveSomeone(request, userId, roomId):
                     player.role = ""
                     player.isActive = False
                     player.isKilled = False
+                    player.save()
                     break
+        
+        room.save()
+        user.save()
 
         return Response("{} Saved".format(user.username))
     except:
@@ -157,7 +199,7 @@ def saveSomeone(request, userId, roomId):
 def voteOut(request, userId, roomID):
     try:
         room = Room.objects.get(roomId=roomID)
-        user = User.objects.get(id=userId)
+        user = User.objects.get(username=userId)
         room.players.remove(user)
 
         if user.role == "Mafia":
@@ -174,6 +216,9 @@ def voteOut(request, userId, roomID):
         user.role = ""
         user.isActive = False
 
+        room.save()
+        user.save()
+
         return Response("User {} Removed".format(user.username))
     except:
         return Response("Room Does Not Exists")
@@ -181,24 +226,28 @@ def voteOut(request, userId, roomID):
 
 
 
-@api_view(['POST',])
+@api_view(['GET',])
 def startGame(request, roomId):
     global minLimitPlayers
     try:
         global avilableRoles
         user = request.user
-        room = Room.objects.filter(roomId=roomId)
+        room = Room.objects.get(roomId=roomId)
+
 
         if user == room.owner:
-            players = room.players
+            players = [player for player in room.players.all()]
             room.isFilled = True
             room.isStarted = True
 
-            if len(players) < minLimitPlayers:
-                return Response("Can not Start Game For less than 7 Players")
+            # if len(players) < 6:
+            #     return Response("Can not Start Game For less than 7 Players")
 
+            # print("Yo")
 
             random.shuffle(players)
+
+            print(players)
 
             room.detective = players[0]
             room.doctor = players[1]
@@ -206,12 +255,15 @@ def startGame(request, roomId):
             for i in range(len(players)):
                 players[i].role = avilableRoles[i]
                 players[i].isActive = True
+                players[i].save()
 
-                if avilableRoles[i] == 'Mafia':
+                if players[i].role == 'Mafia':
                     room.mafias.add(players[i])
                 else:
                     room.city.add(players[i])
             
+            room.save()
+            user.save()
             return Response("Game Started")
 
         else:

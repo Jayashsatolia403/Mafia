@@ -30,6 +30,7 @@ class PlaygroundSerializer(serializers.ModelSerializer):
         user.isActive = True
 
         newRoom.players.add(self.context['request'].user)
+        newRoom.noOfPlayers = 1
         
         
         newRoom.save()

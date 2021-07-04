@@ -70,3 +70,10 @@ def activate(request, uidb64, token):
         return HttpResponse('Thanks for Confirmation! You can now login to your Account.')
     else:
         return HttpResponse('Activation link is invalid!')
+
+
+
+
+@api_view(['GET',])
+def myUsername(request):
+    return Response(request.user.username)
